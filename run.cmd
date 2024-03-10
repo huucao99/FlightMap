@@ -1,0 +1,1 @@
+spark-submit --master local[*] --deploy-mode client --jars graphframes-0.8.2-spark3.2-s_2.12.jar,neo4j-connector-apache-spark_2.12-5.0.0_for_spark_3.jar flightPlanner.py

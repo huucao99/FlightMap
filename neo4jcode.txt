@@ -1,0 +1,20 @@
+# Load country csv
+LOAD CSV FROM 'file:///countries.csv' AS row WITH row[0] AS country, row[1] as iso_code CREATE (c:Country{country: country, iso_code: iso_code}) RETURN(COUNT(c))
+
+# Load airport csv
+LOAD CSV FROM 'file:///airports.csv' AS row WITH row[0] AS airport_id, row[1] as airport_name, row[2] as city, row[3] as country, toFloat(row[6]) as latitude, toFloat(row[7]) as longitude, toInteger(row[8]) as altitude  CREATE (a:Airport{airport_id: airport_id, airport_name: airport_name, city: city, country: country, latitude: latitude, longitude: longitude, altitude: altitude}) RETURN(COUNT(a))                 
+
+# Load airline csv
+LOAD CSV FROM 'file:///airlines.csv' AS row WITH row[0] AS airline_id, row[1] AS airline_name, row[2] as alias, row[5] as callsign, row[6] as country CREATE (a:Airline{airline_id: airline_id, airline_name: airline_name, alias: alias, callsign: callsign, country: country}) RETURN(COUNT(a))
+
+# Load routes csv
+LOAD CSV FROM 'file:///routes.csv' AS row WITH row[1] AS airline_id, row[3] AS source_airport_id, row[5] AS destination_airport_id, toInteger(row[7]) AS stops CREATE (r:Route{airline_id: airline_id, source_airport_id: source_airport_id, destination_airport_id: destination_airport_id, stops: stops}) RETURN(COUNT(r))
+
+# Connect airports to countries
+MATCH(a:Airport) MATCH(c:Country) WHERE a.country = c.country MERGE (a)-[:IN_COUNTRY]->(c) RETURN COUNT(a)
+
+# Connect airlines to countries 
+MATCH(a:Airline) MATCH(c:Country) WHERE a.country = c.country MERGE (a)-[:IN_COUNTRY]->(c) RETURN COUNT(a)
+
+# Connect airports together through routes
+MATCH(r:Route), (aSource:Airport{airport_id: r.source_airport_id}), (aDest:Airport{airport_id: r.destination_airport_id}) MERGE (aSource)-[:HAS_ROUTE {airline_id: r.airline_id, stops: r.stops, source_airport_id:r.source_airport_id, destination_airport_id:r.destination_airport_id}]->(aDest) RETURN COUNT(r)
